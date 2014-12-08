@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: WP Gift Certificate Lite
+Plugin Name: WPGC Lite
 Plugin URI: https://www.wpgiftcertificatereloaded.com/wp-gift-certificate-reloaded-modular
 Description: This plugin allows you to sell printable Gift Certificates Lite as well as manage sold Gift Certificates Lite. Payments are handled and accepted through paypal. A visitor can place up to 10 names per transaction. The certificates are QR code encoded. Use shortcode: [giftcertificateslite].
 Version: 1.30L
@@ -859,6 +859,16 @@ class giftcertificateslite_class
 
 	function front_init() {
 		global $wpdb;
+    $t_gift_certificate = 'Certificat cadeau ';
+    $t_expires = 'Expire le ';
+    $t_price = 'Prix total ';
+    $t_recipient_error = 'SVP entrez un nom';
+    $t_recipients = 'Patient ';
+    $t_preview_cert = 'pré-visualiser le certificat';
+    $t_purchase_button = 'Acheter';
+    $t_edit_button = 'Changer nom';
+    $t_printable_email = 'Une version imprimable sera envoyée à votre courriel PayPal.';
+
 		if ($_POST["giftcertificateslite_signup_action"] == "yes") {
 			header ('Content-type: text/html; charset=utf-8');
 			unset($errors);
@@ -869,7 +879,7 @@ class giftcertificateslite_class
 					if (strlen($tmp) > 0) $recipients[] = $tmp;
 				}
 			}
-			if (sizeof($recipients) == 0) $errors[] = "please enter at least one recipient's name";
+			if (sizeof($recipients) == 0) $errors[] = $t_recipient_error;
 			for ($i=0; $i<sizeof($recipients); $i++) {
 				if (strlen($recipients[$i]) > 63) {
 					$errors[] = "one of recipient's name is too long";
@@ -877,7 +887,7 @@ class giftcertificateslite_class
 				}
 			}
 			if (!empty($errors)) {
-				echo "ERRORS: ".ucfirst(implode(", ", $errors)).".";
+				echo "ERREUR : ".ucfirst(implode(", ", $errors)).".";
 				die();
 			}
 			$price = number_format(sizeof($recipients)*$this->price, 2, ".", "");
@@ -897,24 +907,28 @@ class giftcertificateslite_class
 					'".time()."', '".time()."', '0'
 					)";
 				if ($wpdb->query($sql) !== false) {
-					$items[] = htmlspecialchars($recipients[$i], ENT_QUOTES).' <span>(<a target="_blank" href="'.($this->use_https == "on" ? str_replace("http://", "https://", plugins_url('/gcl_show.php', __FILE__)) : plugins_url('/gcl_show.php', __FILE__)).'?cid='.$code.'">certificate preview</a>)</span>';
+					$items[] = htmlspecialchars($recipients[$i], ENT_QUOTES).' <span>(<a target="_blank" href="'.($this->use_https == "on" ? str_replace("http://", "https://", plugins_url('/gcl_show.php', __FILE__)) : plugins_url('/gcl_show.php', __FILE__)).'?cid='.$code.'">'.$t_preview_cert.'</a>)</span>';
 				}
 			}
 			if (sizeof($items) == 0) {
-				echo "ERRORS: Sevice temporarily not available.";
+				echo "ERREUR: Sevice temporarily not available.";
 				die();
 			}
 			echo '
 <div class="giftcertificateslite_confirmation_info">
 	<table class="giftcertificateslite_confirmation_table">
-		<tr><td style="width: 170px">Gift Certificate:</td><td class="giftcertificateslite_confirmation_data">'.htmlspecialchars($this->title, ENT_QUOTES).' ('.number_format($this->price, 2, ".", "").' '.$this->currency.')'.(strlen($this->description) > 0 ? '<br /><em>'.htmlspecialchars($this->description, ENT_QUOTES).'</em><br />' : '').'</td></tr>
-		<tr><td>Expires on:</td><td class="giftcertificateslite_confirmation_data">'.date("F j, Y", time()+24*3600*$this->validity_period).'</td></tr>
-		<tr><td>Recipients:</td><td class="giftcertificateslite_confirmation_data">'.implode("<br />", $items).'</td></tr>
-		<tr><td>Total price:</td><td class="giftcertificateslite_confirmation_price">'.$price.' '.$this->currency.'</td></tr>
+		<tr><td style="width: 170px">'.$t_gift_certificate.':</td><td class="giftcertificateslite_confirmation_data">'.htmlspecialchars($this->title, ENT_QUOTES).' <small>('.number_format($this->price, 2, ".", "").' '.$this->currency.')</small>'
+      .(strlen($this->description) > 0 ? '<em>'.$this->description.'</em>' : '').'</td></tr>
+		<tr><td>'.$t_expires.':</td>
+      <td class="giftcertificateslite_confirmation_data">'.date("F j, Y", time()+24*3600*$this->validity_period).'</td></tr>
+		<tr><td>'.$t_recipients.':</td>
+      <td class="giftcertificateslite_confirmation_data">'.implode("<br />", $items).'</td></tr>
+		<tr><td>'.$t_price.':</td>
+      <td class="giftcertificateslite_confirmation_price">'.$price.' '.$this->currency.'</td></tr>
 	</table>
 	<div class="giftcertificateslite_signup_buttons">
-		<input type="button" class="giftcertificateslite_signup_button" id="giftcertificateslite_signup_pay" name="giftcertificateslite_signup_pay" value="Purchase" onclick="jQuery(\'#giftcertificateslite_buynow\').click();">
-		<input type="button" class="giftcertificateslite_signup_button" id="giftcertificateslite_signup_edit" name="giftcertificateslite_signup_edit" value="Edit info" onclick="giftcertificateslite_edit();">
+		<input type="submit" class="giftcertificateslite_signup_button" id="giftcertificateslite_signup_pay" name="giftcertificateslite_signup_pay" value="'.$t_purchase_button.'" onclick="jQuery(\'#giftcertificateslite_buynow\').click();">
+		<a class="giftcertificateslite_signup_button" id="giftcertificateslite_signup_edit" name="giftcertificateslite_signup_edit" onclick="giftcertificateslite_edit();">'.$t_edit_button.'</a>
 	</div>
 	<form action="'.(($this->paypal_sandbox == "on") ? 'https://www.sandbox.paypal.com/cgi-bin/webscr' : 'https://www.paypal.com/cgi-bin/webscr').'" method="post" style="display: none;">
 		<input type="hidden" name="cmd" value="_xclick">
@@ -922,7 +936,7 @@ class giftcertificateslite_class
 		<input type="hidden" name="no_shipping" value="1">
 		<input type="hidden" name="lc" value="US">
 		<input type="hidden" name="rm" value="2">
-		<input type="hidden" name="item_name" value="Gift Certificate ('.sizeof($recipients).(sizeof($recipients) > 1 ? ' persons' : ' person').')">
+		<input type="hidden" name="item_name" value="Certificat cadeau">
 		<input type="hidden" name="item_number" value="1">
 		<input type="hidden" name="amount" value="'.$price.'">
 		<input type="hidden" name="currency_code" value="'.$this->currency.'">
@@ -933,7 +947,7 @@ class giftcertificateslite_class
 		<input type="hidden" name="notify_url" value="'.plugins_url('/paypal_ipn.php', __FILE__).'">
 		<input type="submit" id="giftcertificateslite_buynow" value="Submit">
 	</form>
-	<em>Printable gift certificate'.(sizeof($recipients) > 1 ? 's' : '').' will be sent to your PayPal e-mail.</em>
+	<p><em>'.$t_printable_email.'</em></p>
 </div>';
 			die();
 		} else if (isset($_GET["gcl-certificate"])) {
@@ -957,6 +971,12 @@ class giftcertificateslite_class
 
 	function shortcode_handler($_atts) {
 		global $wpdb;
+    $t_recipients_name = 'Nom du patient';
+    $t_mandatory = 'obligatoire';
+    $t_terms = 'Termes & Conditions';
+    $t_recipient_desc = 'Entrez le nom du patient. Ce nom sera imprimé sur le certificat cadeau.';
+    $t_agree_to_terms = 'Cliquer «Continuer» signifie que vous acceptez les';
+    $t_continue_button = 'Continuer';
 		$form = "";
 		if ($this->check_settings() === true)
 		{
@@ -1014,33 +1034,23 @@ jQuery(document).ready(function() {
 <div class="giftcertificateslite_signup_box">
 	<div id="giftcertificateslite_confirmation_container"></div>
 	<form action="" target="giftcertificateslite_signup_iframe" enctype="multipart/form-data" method="post" id="giftcertificateslite_signup_form" onsubmit="giftcertificateslite_presubmit(); return true;">
-	<label class="giftcertificateslite_bigfont">'.htmlspecialchars($this->title, ENT_QUOTES).' ('.number_format($this->price, 2, ".", "").' '.$this->currency.')</label>
-	'.(strlen($this->description) > 0 ? '<br /><em>'.htmlspecialchars($this->description, ENT_QUOTES).'</em><br />' : '').'
-	<br /><br />
-	<label for="giftcertificateslite_signup_string">Recipient\'s name <span>(mandatory)</span></label><br />
+	<p><label class="giftcertificateslite_bigfont">'.htmlspecialchars($this->title, ENT_QUOTES).' <small>('.number_format($this->price, 2, ".", "").' '.$this->currency.')</small></label></p>
+	'.(strlen($this->description) > 0 ? '<em>'.$this->description.'</em>' : '').'
+	<br>
+	<label for="giftcertificateslite_signup_string">'.$t_recipients_name.' <span>('.$t_mandatory.')</span></label><br />
 	<input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient0" name="giftcertificateslite_signup_recipient0" value=""><br />
-	<em>Enter recipient\'s name. This name is printed on gift certificate.</em>
+	<em>'.$t_recipient_desc.'</em>
 	<div class="giftcertificateslite_additional giftcertificateslite_hidden"><input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient1" name="giftcertificateslite_signup_recipient1" value=""></div>
-	<div class="giftcertificateslite_additional giftcertificateslite_hidden"><input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient2" name="giftcertificateslite_signup_recipient2" value=""></div>
-	<div class="giftcertificateslite_additional giftcertificateslite_hidden"><input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient3" name="giftcertificateslite_signup_recipient3" value=""></div>
-	<div class="giftcertificateslite_additional giftcertificateslite_hidden"><input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient4" name="giftcertificateslite_signup_recipient4" value=""></div>
-	<div class="giftcertificateslite_additional giftcertificateslite_hidden"><input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient5" name="giftcertificateslite_signup_recipient5" value=""></div>
-	<div class="giftcertificateslite_additional giftcertificateslite_hidden"><input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient6" name="giftcertificateslite_signup_recipient6" value=""></div>
-	<div class="giftcertificateslite_additional giftcertificateslite_hidden"><input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient7" name="giftcertificateslite_signup_recipient7" value=""></div>
-	<div class="giftcertificateslite_additional giftcertificateslite_hidden"><input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient8" name="giftcertificateslite_signup_recipient8" value=""></div>
-	<div class="giftcertificateslite_additional giftcertificateslite_hidden"><input type="text" class="giftcertificateslite_signup_long" id="giftcertificateslite_signup_recipient9" name="giftcertificateslite_signup_recipient9" value=""></div>
-	<br /><br />
-	<a class="giftcertificateslite_addrecipient" href="#" onclick="giftcertificateslite_addrecipient(); return false;">Add recipient</a>
 	<br /><br />';
 			if (!empty($this->terms)) $form .= '
 	<div id="giftcertificateslite_signup_terms_box" style="display: none;">
-	<label for="giftcertificateslite_signup_link">Terms & Conditions</label><br />
+	<label for="giftcertificateslite_signup_link">'.$t_terms.'</label><br />
 	<div class="giftcertificateslite_signup_terms">'.$terms.'</div>
-	<br /></div><p class="giftcertificateslite_text">By clicking "Continue" button I agree with <a href="#" onclick="jQuery(\'#giftcertificateslite_signup_terms_box\').toggle(300); return false;">Terms & Conditions</a>.</p>';
+	<br /></div><p class="giftcertificateslite_text">'.$t_agree_to_terms.' <a href="#" onclick="jQuery(\'#giftcertificateslite_signup_terms_box\').toggle(300); return false;">'.$t_terms.'</a>.</p>';
 			$form .= '	
 	<div class="giftcertificateslite_signup_buttons">
 		<input type="hidden" name="giftcertificateslite_signup_action" value="yes">
-		<input type="submit" class="giftcertificateslite_signup_button" id="giftcertificateslite_signup_submit" name="giftcertificateslite_signup_submit" value="Continue">
+		<input type="submit" class="giftcertificateslite_signup_button" id="giftcertificateslite_signup_submit" name="giftcertificateslite_signup_submit" value="'.$t_continue_button.'">
 		<div id="giftcertificateslite_signup_spinner"></div>
 	</div>
 	<div id="giftcertificateslite_signup_errorbox"></div>

@@ -39,39 +39,45 @@ body {font-family: arial, verdana; font-size: 13px; color: #000;}
 			else if ($row["status"] >= GCL_STATUS_PENDING) $status = '<span style="color: red; font-weight: bold;">BLOCKED</a>';
 			else $status = "";
 			print ('
-		<table style="border: solid 2px #000;width: 600px; margin-bottom: 20px; border-collapse: collapse">
+		<table style="border: solid 2px #000;width: 800px; margin-bottom: 20px; border-collapse: collapse">
 			<tr>
-				<td style="padding: 10px; vertical-align: middle; text-align: center; border: 1px solid #000; width: 150px;">
+				<td style="padding: 10px; vertical-align: top; border: 1px solid #000; width: 150px;">
 					<!-- <img src="http://chart.apis.google.com/chart?chs=150x150&cht=qr&chld=|1&chl='.rawurlencode(get_bloginfo("wpurl").'/?gcl-certificate='.$row["code"]).'" alt="QR Code" /> -->
-					<img src="'.plugins_url('/phpqrcode/qrcode.php?url='.rawurlencode(get_bloginfo("wpurl").'/?gcl-certificate='.$row["code"]), __FILE__).'" alt="QR Code" width="150" height="150" />
-					'.$status.'
+					<!-- <img src="'.plugins_url('/phpqrcode/qrcode.php?url='.rawurlencode(get_bloginfo("wpurl").'/?gcl-certificate='.$row["code"]), __FILE__).'" alt="QR Code" width="150" height="150" /> -->
+
+					<a href="http://simonbelair.ca"><img src="'.get_template_directory_uri().'/images/logo-no-title.png"></a>
+
 				</td>
 				<td style="padding: 10px; vertical-align: top; border: 1px solid #000;">
 					<table style="width: 100%;">
 						<tr>
-							<td colspan="2" style="font-size: 16px; font-weight: bold; text-align: center; padding-bottom: 10px;">'.htmlspecialchars($giftcertificateslite->title, ENT_QUOTES).'</td>
+							<td colspan="2" style="padding-bottom: 10px;">
+              
+            	<h2>Certificat Cadeau — Traitement d’acupuncture</h2>
+            	'.(strlen($giftcertificateslite->description) > 0 ? '<em>'.$giftcertificateslite->description.'</em>' : '').'
+
 						</tr>
 						<tr>
-							<td style="font-weight: bold; padding-bottom: 10px; width: 50%;">Number:</td>
-							<td style="padding-bottom: 10px;">'.htmlspecialchars($row['code'], ENT_QUOTES).'</td>
+							<td style="font-weight: bold; padding-bottom: 10px;">Patient :</td>
+							<td style="padding-bottom: 10px;">'.htmlspecialchars($row['recipient'], ENT_QUOTES).'</td>
 						</tr>
 						<tr>
-							<td style="font-weight: bold; padding-bottom: 10px;">Valid until:</td>
+							<td style="font-weight: bold; padding-bottom: 10px;">Expire le :</td>
 							<td style="padding-bottom: 10px;">'.date("F j, Y", $row['registered']+24*3600*$giftcertificateslite->validity_period).'</td>
 						</tr>
 						<tr>
-							<td style="font-weight: bold; padding-bottom: 10px;">Price:</td>
+							<td style="font-weight: bold; padding-bottom: 10px;">Valeur :</td>
 							<td style="padding-bottom: 10px;">'.number_format($giftcertificateslite->price, 2, ".", "").' '.$giftcertificateslite->currency.'</td>
 						</tr>
 						<tr>
-							<td style="font-weight: bold; padding-bottom: 10px;">Owner:</td>
-							<td style="padding-bottom: 10px;">'.htmlspecialchars($row['recipient'], ENT_QUOTES).'</td>
+							<td style="font-weight: bold; padding-bottom: 10px; width: 50%;">'.$status.'</td>
+							<td style="padding-bottom: 10px;">'.htmlspecialchars($row['code'], ENT_QUOTES).'</td>
 						</tr>
 					</table>
 				</td>
 			</tr>
 			<tr>
-				<td colspan="2" style="text-align: center; border: 1px solid #000; padding: 10px;"><span style="font-size:24px;">'.$giftcertificateslite->company_title.'</span><br/>'.$description.'</td>
+				<td colspan="2" style="border: 1px solid #000; padding: 10px;"><span style="font-size:24px;">'.$giftcertificateslite->company_title.'</span><br/>'.$description.'</td>
 			</tr>
 		</table>');
 			$i++;
